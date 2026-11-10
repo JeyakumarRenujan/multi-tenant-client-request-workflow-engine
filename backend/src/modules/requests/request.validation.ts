@@ -63,3 +63,33 @@ export const assignRequestSchema = z.object({
 }).strict();
 
 export type AssignRequestInput = z.infer<typeof assignRequestSchema>;
+export const transitionRequestSchema = z.object({
+  version: z.number().int().min(1),
+  status: z.enum([
+    "SUBMITTED",
+    "UNDER_REVIEW",
+    "APPROVED",
+    "REJECTED",
+    "IN_PROGRESS",
+    "COMPLETED"
+  ]),
+  rejectionReason: z.string().trim().min(1).max(2000).optional()
+}).strict().superRefine((data, ctx) => {
+  if (data.status === "REJECTED" && !data.rejectionReason) {
+    ctx.addIssue({
+      code: "custom",
+      path: ["rejectionReason"],
+      message: "A rejection reason is required"
+    });
+  }
+
+  if (data.status !== "REJECTED" && data.rejectionReason !== undefined) {
+    ctx.addIssue({
+      code: "custom",
+      path: ["rejectionReason"],
+      message: "A rejection reason is only allowed when rejecting a request"
+    });
+  }
+});
+
+export type TransitionRequestInput = z.infer<typeof transitionRequestSchema>;

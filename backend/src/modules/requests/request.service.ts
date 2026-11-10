@@ -405,3 +405,161 @@ export async function assignRequest(
     return updatedRequest;
   });
 }
+export async function transitionRequest(
+  requestId: string,
+  input: import("./request.validation").TransitionRequestInput,
+  actor: RequestActor
+) {
+  if (!actor.organizationId) {
+    throw new RequestError(
+      "Your account is not associated with an organization",
+      403
+    );
+  }
+
+  if (
+    actor.role !== UserRole.CLIENT_USER &&
+    actor.role !== UserRole.MANAGER &&
+    actor.role !== UserRole.DEVELOPER
+  ) {
+    throw new RequestError(
+      "Your role cannot perform workflow transitions",
+      403
+    );
+  }
+
+  if (actor.role === UserRole.CLIENT_USER && !actor.clientId) {
+    throw new RequestError(
+      "Your account is not associated with a client",
+      403
+    );
+  }
+
+  return prisma.$transaction(async (tx) => {
+    const visibility: Prisma.RequestWhereInput = {
+      id: requestId,
+      organizationId: actor.organizationId!,
+      deletedAt: null
+    };
+
+    if (actor.role === UserRole.CLIENT_USER) {
+      visibility.clientId = actor.clientId!;
+      visibility.createdById = actor.id;
+    }
+
+    if (actor.role === UserRole.DEVELOPER) {
+      visibility.assignedToId = actor.id;
+    }
+
+    const existing = await tx.request.findFirst({
+      where: visibility,
+      select: requestSelect
+    });
+
+    if (!existing) {
+      throw new RequestError("Request not found", 404);
+    }
+
+    if (existing.version !== input.version) {
+      throw new RequestError(
+        "Request was modified by another user. Please refresh and try again.",
+        409
+      );
+    }
+
+    const validTransition =
+      (
+        actor.role === UserRole.CLIENT_USER &&
+        existing.status === RequestStatus.DRAFT &&
+        input.status === RequestStatus.SUBMITTED
+      ) ||
+      (
+        actor.role === UserRole.MANAGER &&
+        (
+          (
+            existing.status === RequestStatus.SUBMITTED &&
+            input.status === RequestStatus.UNDER_REVIEW
+          ) ||
+          (
+            existing.status === RequestStatus.UNDER_REVIEW &&
+            (
+              input.status === RequestStatus.APPROVED ||
+              input.status === RequestStatus.REJECTED
+            )
+          )
+        )
+      ) ||
+      (
+        actor.role === UserRole.DEVELOPER &&
+        (
+          (
+            existing.status === RequestStatus.APPROVED &&
+            input.status === RequestStatus.IN_PROGRESS
+          ) ||
+          (
+            existing.status === RequestStatus.IN_PROGRESS &&
+            input.status === RequestStatus.COMPLETED
+          )
+        )
+      );
+
+    if (!validTransition) {
+      throw new RequestError(
+        `Transition from ${existing.status} to ${input.status} is not permitted`,
+        409
+      );
+    }
+
+    const result = await tx.request.updateMany({
+      where: {
+        id: requestId,
+        organizationId: actor.organizationId!,
+        status: existing.status,
+        version: input.version,
+        deletedAt: null
+      },
+      data: {
+        status: input.status,
+        rejectionReason: input.status === RequestStatus.REJECTED
+          ? input.rejectionReason!
+          : null,
+        version: { increment: 1 }
+      }
+    });
+
+    if (result.count !== 1) {
+      throw new RequestError(
+        "Request was modified by another user. Please refresh and try again.",
+        409
+      );
+    }
+
+    const updatedRequest = await tx.request.findFirstOrThrow({
+      where: {
+        id: requestId,
+        organizationId: actor.organizationId!
+      },
+      select: requestSelect
+    });
+
+    await tx.activityHistory.create({
+      data: {
+        organizationId: actor.organizationId!,
+        requestId,
+        actorId: actor.id,
+        event: "REQUEST_STATUS_CHANGED",
+        previousStatus: existing.status,
+        newStatus: input.status,
+        metadata: {
+          previousVersion: existing.version,
+          newVersion: updatedRequest.version,
+          rejectionReason: input.status === RequestStatus.REJECTED
+            ? input.rejectionReason
+            : null
+        }
+      }
+    });
+
+    return updatedRequest;
+  });
+}

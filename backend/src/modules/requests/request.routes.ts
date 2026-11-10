@@ -7,7 +7,8 @@ import {
   createRequestController,
   getRequestByIdController,
   listRequestsController,
-  updateRequestController
+  updateRequestController,
+  transitionRequestController
 } from "./request.controller";
 import { createRequestSchema } from "./request.validation";
 
@@ -59,6 +60,12 @@ router.patch(
   authenticate,
   authorize(UserRole.MANAGER),
   assignRequestController
+);
+
+router.patch(
+  "/:id/status",
+  authenticate,
+  transitionRequestController
 );
 
 router.get(

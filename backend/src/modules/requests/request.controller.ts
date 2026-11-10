@@ -5,13 +5,15 @@ import {
   getRequestById,
   listRequests,
   RequestError,
-  updateRequest
+  updateRequest,
+  transitionRequest
 } from "./request.service";
 import {
   assignRequestSchema,
   listRequestsSchema,
   requestIdSchema,
-  updateRequestSchema
+  updateRequestSchema,
+  transitionRequestSchema
 } from "./request.validation";
 
 function sendRequestError(
@@ -213,6 +215,49 @@ export async function assignRequestController(
     res.status(200).json({
       success: true,
       message: "Request assignment updated successfully",
+      data: { request: updatedRequest }
+    });
+  } catch (error) {
+    sendRequestError(error, res, next);
+  }
+}
+export async function transitionRequestController(
+  req: Request,
+  res: Response,
+  next: NextFunction
+) {
+  try {
+    if (!req.authUser) {
+      res.status(401).json({
+        success: false,
+        message: "Authentication required"
+      });
+      return;
+    }
+
+    const parsedId = requestIdSchema.safeParse(req.params.id);
+    const parsedBody = transitionRequestSchema.safeParse(req.body);
+
+    if (!parsedId.success || !parsedBody.success) {
+      res.status(400).json({
+        success: false,
+        message: "Invalid workflow transition details",
+        errors: !parsedBody.success
+          ? parsedBody.error.flatten().fieldErrors
+          : { id: ["Invalid request ID"] }
+      });
+      return;
+    }
+
+    const updatedRequest = await transitionRequest(
+      parsedId.data,
+      parsedBody.data,
+      req.authUser
+    );
+
+    res.status(200).json({
+      success: true,
+      message: "Request status updated successfully",
       data: { request: updatedRequest }
     });
   } catch (error) {
