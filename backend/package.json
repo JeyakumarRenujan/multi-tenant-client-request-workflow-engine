@@ -7,7 +7,7 @@
         "test": "tests"
     },
     "scripts": {
-        "test": "tsx --test tests/auth.test.ts",
+        "test": "tsx --test tests/auth.test.ts tests/request.validation.test.ts",
         "dev": "tsx watch src/server.ts",
         "build": "tsc",
         "start": "node dist/server.js",
