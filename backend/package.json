@@ -4,7 +4,7 @@
     "description":  "",
     "main":  "index.js",
     "directories":  {
-                        "test":  "tsx --test tests/auth.test.ts tests/request.validation.test.ts tests/request.service.test.ts tests/request.routes.test.ts tests/request.read.test.ts tests/request.update.test.ts tests/request.workflow.test.ts tests/dashboard.test.ts"
+                        "test":  "tsx --test tests/auth.test.ts tests/request.validation.test.ts tests/request.service.test.ts tests/request.routes.test.ts tests/request.read.test.ts tests/request.update.test.ts tests/request.workflow.test.ts tests/dashboard.test.ts tests/docs.test.ts"
                     },
     "scripts":  {
                     "test":  "tsx --test tests/auth.test.ts tests/request.validation.test.ts tests/request.service.test.ts tests/request.routes.test.ts tests/request.read.test.ts tests/request.update.test.ts tests/request.workflow.test.ts tests/dashboard.test.ts",
@@ -31,6 +31,7 @@
                          "express-rate-limit":  "^8.7.4",
                          "helmet":  "^8.3.0",
                          "jsonwebtoken":  "^9.0.3",
+                         "swagger-ui-express": "^5.0.1",
                          "zod":  "^4.6.7"
                      },
     "devDependencies":  {
@@ -40,6 +41,7 @@
                             "@types/jsonwebtoken":  "^9.0.10",
                             "@types/node":  "^26.6.6",
                             "@types/supertest":  "^7.2.1",
+                            "@types/swagger-ui-express": "^4.1.8",
                             "prisma":  "^6.19.3",
                             "supertest":  "^7.3.2",
                             "tsx":  "^4.23.15",
