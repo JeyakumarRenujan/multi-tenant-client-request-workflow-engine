@@ -20,7 +20,7 @@ export function generateAccessToken(userId: string): string {
 }
 
 export function verifyAccessToken(token: string): AccessTokenPayload {
-  const payload = jwt.verify(token, env.JWT_ACCESS_SECRET);
+  const payload = jwt.verify(token, env.JWT_ACCESS_SECRET, { algorithms: ["HS256"] });
 
   if (
     typeof payload === "string" ||

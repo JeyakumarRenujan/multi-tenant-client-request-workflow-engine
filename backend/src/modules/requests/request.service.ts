@@ -562,4 +562,76 @@ export async function transitionRequest(
 
     return updatedRequest;
   });
+}export async function softDeleteRequest(
+  requestId: string,
+  actor: RequestActor
+) {
+  if (!actor.organizationId) {
+    throw new RequestError(
+      "Your account is not associated with an organization",
+      403
+    );
+  }
+
+  if (
+    actor.role !== UserRole.CLIENT_USER &&
+    actor.role !== UserRole.ORGANIZATION_ADMIN
+  ) {
+    throw new RequestError(
+      "Only Client Users and Organization Admins can delete draft requests",
+      403
+    );
+  }
+
+  const where: Prisma.RequestWhereInput = {
+    id: requestId,
+    organizationId: actor.organizationId,
+    status: RequestStatus.DRAFT,
+    deletedAt: null
+  };
+
+  if (actor.role === UserRole.CLIENT_USER) {
+    if (!actor.clientId) {
+      throw new RequestError(
+        "Your account is not associated with a client",
+        403
+      );
+    }
+
+    where.clientId = actor.clientId;
+    where.createdById = actor.id;
+  }
+
+  const existing = await prisma.request.findFirst({
+    where,
+    select: { id: true }
+  });
+
+  if (!existing) {
+    throw new RequestError(
+      "Draft request not found or you do not have permission to delete it",
+      404
+    );
+  }
+
+  const result = await prisma.request.updateMany({
+    where: {
+      ...where,
+      status: RequestStatus.DRAFT,
+      deletedAt: null
+    },
+    data: {
+      deletedAt: new Date(),
+      version: { increment: 1 }
+    }
+  });
+
+  if (result.count !== 1) {
+    throw new RequestError(
+      "Request could not be deleted because it was modified",
+      409
+    );
+  }
+
+  return { id: existing.id, deleted: true };
 }

@@ -1,4 +1,4 @@
-﻿import express from "express";
+import express from "express";
 import cors from "cors";
 import helmet from "helmet";
 import cookieParser from "cookie-parser";
@@ -8,6 +8,7 @@ import { env } from "./config/env";
 import authRoutes from "./modules/auth/auth.routes";
 import requestRoutes from "./modules/requests/request.routes";
 import dashboardRoutes from "./modules/dashboard/dashboard.routes";
+import userRoutes from "./modules/users/user.routes";
 
 const app = express();
 
@@ -31,6 +32,7 @@ app.use("/api/docs", swaggerUi.serve, swaggerUi.setup(openApiDocument));
 app.use("/api/v1/auth", authRoutes);
 app.use("/api/v1/requests", requestRoutes);
 app.use("/api/v1/dashboard", dashboardRoutes);
+app.use("/api/v1/users", userRoutes);
 
 app.get("/api/v1/health", (_req, res) => {
   res.status(200).json({

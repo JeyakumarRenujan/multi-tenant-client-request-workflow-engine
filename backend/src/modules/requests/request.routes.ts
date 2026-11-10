@@ -8,7 +8,8 @@ import {
   getRequestByIdController,
   listRequestsController,
   updateRequestController,
-  transitionRequestController
+  transitionRequestController,
+  softDeleteRequestController
 } from "./request.controller";
 import { createRequestSchema } from "./request.validation";
 
@@ -65,7 +66,8 @@ router.patch(
 router.patch(
   "/:id/status",
   authenticate,
-  transitionRequestController
+  transitionRequestController,
+  softDeleteRequestController
 );
 
 router.get(
@@ -75,3 +77,9 @@ router.get(
 );
 
 export default router;
+router.delete(
+  "/:id",
+  authenticate,
+  authorize(UserRole.CLIENT_USER, UserRole.ORGANIZATION_ADMIN),
+  softDeleteRequestController
+);
