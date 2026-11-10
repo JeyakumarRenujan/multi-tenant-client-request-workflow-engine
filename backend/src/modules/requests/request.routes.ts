@@ -3,9 +3,11 @@ import { UserRole } from "@prisma/client";
 import { authenticate } from "../../middleware/auth.middleware";
 import { authorize } from "../../middleware/authorize.middleware";
 import {
+  assignRequestController,
   createRequestController,
   getRequestByIdController,
-  listRequestsController
+  listRequestsController,
+  updateRequestController
 } from "./request.controller";
 import { createRequestSchema } from "./request.validation";
 
@@ -43,6 +45,20 @@ router.get(
   "/",
   authenticate,
   listRequestsController
+);
+
+router.patch(
+  "/:id",
+  authenticate,
+  authorize(UserRole.MANAGER),
+  updateRequestController
+);
+
+router.patch(
+  "/:id/assignment",
+  authenticate,
+  authorize(UserRole.MANAGER),
+  assignRequestController
 );
 
 router.get(
