@@ -66,7 +66,13 @@ router.patch(
 router.patch(
   "/:id/status",
   authenticate,
-  transitionRequestController,
+  transitionRequestController
+);
+
+router.delete(
+  "/:id",
+  authenticate,
+  authorize(UserRole.CLIENT_USER, UserRole.ORGANIZATION_ADMIN),
   softDeleteRequestController
 );
 
@@ -77,9 +83,3 @@ router.get(
 );
 
 export default router;
-router.delete(
-  "/:id",
-  authenticate,
-  authorize(UserRole.CLIENT_USER, UserRole.ORGANIZATION_ADMIN),
-  softDeleteRequestController
-);
