@@ -4,10 +4,10 @@
     "description":  "",
     "main":  "index.js",
     "directories":  {
-                        "test":  "tests"
+                        "test":  "tsx --test tests/auth.test.ts tests/request.validation.test.ts tests/request.service.test.ts tests/request.routes.test.ts tests/request.read.test.ts tests/request.update.test.ts tests/request.workflow.test.ts tests/dashboard.test.ts"
                     },
     "scripts":  {
-                    "test":  "tsx --test tests/auth.test.ts tests/request.validation.test.ts tests/request.service.test.ts tests/request.routes.test.ts tests/request.read.test.ts tests/request.update.test.ts tests/request.workflow.test.ts",
+                    "test":  "tsx --test tests/auth.test.ts tests/request.validation.test.ts tests/request.service.test.ts tests/request.routes.test.ts tests/request.read.test.ts tests/request.update.test.ts tests/request.workflow.test.ts tests/dashboard.test.ts",
                     "dev":  "tsx watch src/server.ts",
                     "build":  "tsc",
                     "start":  "node dist/server.js",

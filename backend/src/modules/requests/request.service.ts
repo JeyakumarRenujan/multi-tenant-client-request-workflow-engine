@@ -47,7 +47,7 @@ const requestSelect = {
   updatedAt: true
 } satisfies Prisma.RequestSelect;
 
-function buildVisibilityFilter(
+export function buildVisibilityFilter(
   actor: RequestActor
 ): Prisma.RequestWhereInput {
   if (actor.role === UserRole.PLATFORM_ADMIN) {
