@@ -2,7 +2,11 @@ import { Router } from "express";
 import { UserRole } from "@prisma/client";
 import { authenticate } from "../../middleware/auth.middleware";
 import { authorize } from "../../middleware/authorize.middleware";
-import { createRequestController } from "./request.controller";
+import {
+  createRequestController,
+  getRequestByIdController,
+  listRequestsController
+} from "./request.controller";
 import { createRequestSchema } from "./request.validation";
 
 const router = Router();
@@ -33,6 +37,18 @@ router.post(
   authorize(UserRole.CLIENT_USER),
   validateCreateRequest,
   createRequestController
+);
+
+router.get(
+  "/",
+  authenticate,
+  listRequestsController
+);
+
+router.get(
+  "/:id",
+  authenticate,
+  getRequestByIdController
 );
 
 export default router;
