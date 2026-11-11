@@ -19,11 +19,13 @@ import {
   transitionRequest,
   getRequestAssignees,
   assignRequest,
+  getRequestActivity,
 } from "../../services/requestService";
 import type {
   WorkflowRequest,
   RequestStatus,
   RequestAssignee,
+  RequestActivity,
 } from "../../types/request";
 
 const statusStyles: Record<RequestStatus, string> = {
@@ -59,6 +61,23 @@ function formatDate(value: string | null) {
   });
 }
 
+
+function describeActivity(event: string) {
+  switch (event) {
+    case "REQUEST_CREATED":
+      return "Request created";
+    case "REQUEST_UPDATED":
+      return "Request details updated";
+    case "REQUEST_ASSIGNED":
+      return "Developer assigned";
+    case "REQUEST_UNASSIGNED":
+      return "Developer unassigned";
+    case "REQUEST_STATUS_CHANGED":
+      return "Request status changed";
+    default:
+      return formatLabel(event);
+  }
+}
 export default function RequestDetailsPage() {
   const { id } = useParams<{ id: string }>();
   const { user } = useAuth();
@@ -75,6 +94,9 @@ export default function RequestDetailsPage() {
   const [selectedAssigneeId, setSelectedAssigneeId] = useState("");
   const [isLoadingAssignees, setIsLoadingAssignees] = useState(false);
   const [isAssigning, setIsAssigning] = useState(false);
+  const [activities, setActivities] = useState<RequestActivity[]>([]);
+  const [isLoadingActivity, setIsLoadingActivity] = useState(true);
+  const [activityError, setActivityError] = useState("");
 
   const loadRequest = useCallback(async () => {
     if (!id) {
@@ -105,6 +127,30 @@ export default function RequestDetailsPage() {
 
     return () => window.clearTimeout(timeout);
   }, [loadRequest]);
+  const loadActivity = useCallback(async () => {
+    if (!id) return;
+
+    setIsLoadingActivity(true);
+    setActivityError("");
+
+    try {
+      const result = await getRequestActivity(id);
+      setActivities(result);
+    } catch {
+      setActivityError("Unable to load request activity. Please try again.");
+      setActivities([]);
+    } finally {
+      setIsLoadingActivity(false);
+    }
+  }, [id]);
+
+  useEffect(() => {
+    const timeout = window.setTimeout(() => {
+      void loadActivity();
+    }, 0);
+
+    return () => window.clearTimeout(timeout);
+  }, [loadActivity]);
 
   useEffect(() => {
     if (user?.role !== "MANAGER") return;
@@ -153,6 +199,7 @@ export default function RequestDetailsPage() {
       setRequest(updated);
       setSelectedAssigneeId(updated.assignedToId ?? "");
       setSuccess("Developer assignment updated successfully.");
+      void loadActivity();
     } catch {
       setError("Unable to update the assignment. Please refresh and try again.");
     } finally {
@@ -186,6 +233,7 @@ export default function RequestDetailsPage() {
       setShowRejectForm(false);
       setRejectionReason("");
       setSuccess(`Request status updated to ${formatLabel(status)}.`);
+      void loadActivity();
     } catch (err) {
       const message =
         typeof err === "object" &&
@@ -449,6 +497,118 @@ export default function RequestDetailsPage() {
           </div>
         </section>
 
+        <section className="bg-white border border-slate-200 rounded-2xl p-6 sm:p-8 mb-6">
+          <div className="flex items-center justify-between gap-3 mb-6">
+            <div>
+              <h2 className="font-bold text-slate-900">Activity timeline</h2>
+              <p className="text-sm text-slate-500 mt-1">
+                A chronological record of actions performed on this request.
+              </p>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => void loadActivity()}
+              disabled={isLoadingActivity}
+              className="inline-flex items-center gap-2 rounded-lg border border-slate-200 px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50 disabled:opacity-50"
+            >
+              <RefreshCw size={15} className={isLoadingActivity ? "animate-spin" : ""} />
+              Refresh
+            </button>
+          </div>
+
+          {isLoadingActivity && (
+            <div className="flex items-center gap-3 py-6 text-sm text-slate-500">
+              <RefreshCw size={17} className="animate-spin" />
+              Loading activity history...
+            </div>
+          )}
+
+          {!isLoadingActivity && activityError && (
+            <div role="alert" className="rounded-xl border border-red-200 bg-red-50 p-4">
+              <p className="text-sm text-red-700">{activityError}</p>
+              <button
+                type="button"
+                onClick={() => void loadActivity()}
+                className="mt-2 text-sm font-semibold text-red-800 underline"
+              >
+                Try again
+              </button>
+            </div>
+          )}
+
+          {!isLoadingActivity && !activityError && activities.length === 0 && (
+            <div className="rounded-xl border border-dashed border-slate-200 px-4 py-8 text-center">
+              <Clock size={25} className="mx-auto text-slate-400 mb-3" />
+              <p className="text-sm font-medium text-slate-700">
+                No activity recorded yet
+              </p>
+              <p className="text-xs text-slate-500 mt-1">
+                Request actions will appear here as they happen.
+              </p>
+            </div>
+          )}
+
+          {!isLoadingActivity && !activityError && activities.length > 0 && (
+            <div className="relative">
+              {activities.map((activity, index) => (
+                <div key={activity.id} className="relative flex gap-4 pb-7 last:pb-0">
+                  {index !== activities.length - 1 && (
+                    <div className="absolute left-[15px] top-9 bottom-0 w-px bg-slate-200" />
+                  )}
+
+                  <div className="relative z-10 flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-teal-100 bg-teal-50">
+                    <Clock size={15} className="text-teal-700" />
+                  </div>
+
+                  <div className="min-w-0 flex-1 pt-1">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <p className="text-sm font-semibold text-slate-800">
+                        {describeActivity(activity.event)}
+                      </p>
+                      <time
+                        dateTime={activity.createdAt}
+                        className="text-xs text-slate-400"
+                      >
+                        {formatDate(activity.createdAt)}
+                      </time>
+                    </div>
+
+                    <p className="text-sm text-slate-600 mt-1">
+                      {activity.actor?.name ?? "System"}
+                    </p>
+
+                    {activity.actor?.role && (
+                      <span className="inline-block mt-1 rounded-full bg-slate-100 px-2 py-1 text-xs text-slate-500">
+                        {formatLabel(activity.actor.role)}
+                      </span>
+                    )}
+
+                    {(activity.previousStatus || activity.newStatus) && (
+                      <div className="mt-3 flex flex-wrap items-center gap-2 text-xs">
+                        {activity.previousStatus && (
+                          <span className={`rounded-full px-2.5 py-1 font-medium ${statusStyles[activity.previousStatus]}`}>
+                            {formatLabel(activity.previousStatus)}
+                          </span>
+                        )}
+
+                        {activity.previousStatus && activity.newStatus && (
+                          <span className="text-slate-400">→</span>
+                        )}
+
+                        {activity.newStatus && (
+                          <span className={`rounded-full px-2.5 py-1 font-medium ${statusStyles[activity.newStatus]}`}>
+                            {formatLabel(activity.newStatus)}
+                          </span>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </section>
         {(canSubmit || canReview || canDecide || canStart || canComplete) && (
           <section className="bg-white border border-slate-200 rounded-2xl p-6 sm:p-8">
             <h2 className="font-bold text-slate-900 mb-2">

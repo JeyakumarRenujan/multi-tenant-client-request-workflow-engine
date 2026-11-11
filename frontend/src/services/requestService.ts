@@ -4,7 +4,8 @@ import type {
   RequestListResponse,
   WorkflowRequest,
   RequestAssigneesResponse,
-  AssignRequestInput
+  AssignRequestInput,
+  RequestActivityResponse
 } from "../types/request";
 
 export interface CreateRequestInput {
@@ -87,4 +88,12 @@ export async function assignRequest(
   }>(`/requests/${id}/assignment`, input);
 
   return response.data.data.request;
+}
+
+export async function getRequestActivity(id: string) {
+  const response = await api.get<RequestActivityResponse>(
+    `/requests/${id}/activity`
+  );
+
+  return response.data.data.activities;
 }

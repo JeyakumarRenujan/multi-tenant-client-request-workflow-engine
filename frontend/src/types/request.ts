@@ -73,3 +73,27 @@ export interface AssignRequestInput {
   version: number;
   assignedToId: string | null;
 }
+
+export interface RequestActivityActor {
+  id: string;
+  name: string;
+  role: string;
+}
+
+export interface RequestActivity {
+  id: string;
+  event: string;
+  previousStatus: RequestStatus | null;
+  newStatus: RequestStatus | null;
+  metadata: unknown;
+  createdAt: string;
+  actor: RequestActivityActor | null;
+}
+
+export interface RequestActivityResponse {
+  success: boolean;
+  message: string;
+  data: {
+    activities: RequestActivity[];
+  };
+}
