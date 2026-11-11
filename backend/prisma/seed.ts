@@ -96,7 +96,17 @@ async function main() {
     });
 
     if (existing) {
-      console.log(`Existing account preserved: ${account.email}`);
+      await prisma.user.update({
+        where: { email: account.email },
+        data: {
+          name: account.name,
+          role: account.role,
+          organizationId: account.organizationId,
+          clientId: account.clientId
+        }
+      });
+
+      console.log(`Existing demo account synchronized: ${account.email}`);
       continue;
     }
 
