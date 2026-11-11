@@ -6,7 +6,7 @@ import CreateRequestPage from "./pages/requests/CreateRequestPage";
 import RequestDetailsPage from "./pages/requests/RequestDetailsPage";
 import UsersPage from "./pages/users/UsersPage";
 import ProtectedRoute from "./routes/ProtectedRoute";
-import { useAuth } from "./context/AuthContext";
+import { useAuth } from "./context/useAuth";
 
 function PublicOnlyRoute() {
   const { isAuthenticated, isLoading } = useAuth();

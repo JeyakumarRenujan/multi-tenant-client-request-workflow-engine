@@ -54,3 +54,22 @@ export interface RequestFilters {
   priority?: RequestPriority;
   category?: string;
 }
+
+export interface RequestAssignee {
+  id: string;
+  name: string;
+  email: string;
+}
+
+export interface RequestAssigneesResponse {
+  success: boolean;
+  message: string;
+  data: {
+    developers: RequestAssignee[];
+  };
+}
+
+export interface AssignRequestInput {
+  version: number;
+  assignedToId: string | null;
+}

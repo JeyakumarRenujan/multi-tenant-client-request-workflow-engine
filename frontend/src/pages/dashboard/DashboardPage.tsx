@@ -14,7 +14,7 @@ import {
   XCircle,
 } from "lucide-react";
 import api from "../../api/axios";
-import { useAuth } from "../../context/AuthContext";
+import { useAuth } from "../../context/useAuth";
 import type {
   DashboardResponse,
   DashboardSummary,
@@ -98,7 +98,11 @@ export default function DashboardPage() {
   }, []);
 
   useEffect(() => {
-    void loadDashboard();
+    const timeout = window.setTimeout(() => {
+      void loadDashboard();
+    }, 0);
+
+    return () => window.clearTimeout(timeout);
   }, [loadDashboard]);
 
   const handleLogout = async () => {

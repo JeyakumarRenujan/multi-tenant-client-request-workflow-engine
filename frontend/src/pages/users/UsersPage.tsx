@@ -334,11 +334,19 @@ export default function UsersPage() {
   }, []);
 
   useEffect(() => {
-    void loadUsers();
+    const timeout = window.setTimeout(() => {
+      void loadUsers();
+    }, 0);
+
+    return () => window.clearTimeout(timeout);
   }, [loadUsers]);
 
   useEffect(() => {
-    void loadClients();
+    const timeout = window.setTimeout(() => {
+      void loadClients();
+    }, 0);
+
+    return () => window.clearTimeout(timeout);
   }, [loadClients]);
 
   useEffect(() => {

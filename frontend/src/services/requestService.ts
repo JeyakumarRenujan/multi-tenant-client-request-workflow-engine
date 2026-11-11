@@ -2,7 +2,9 @@ import api from "../api/axios";
 import type {
   RequestFilters,
   RequestListResponse,
-  WorkflowRequest
+  WorkflowRequest,
+  RequestAssigneesResponse,
+  AssignRequestInput
 } from "../types/request";
 
 export interface CreateRequestInput {
@@ -62,6 +64,27 @@ export async function transitionRequest(
     message: string;
     data: { request: WorkflowRequest };
   }>(`/requests/${id}/status`, input);
+
+  return response.data.data.request;
+}
+
+export async function getRequestAssignees() {
+  const response = await api.get<RequestAssigneesResponse>(
+    "/requests/assignees"
+  );
+
+  return response.data.data.developers;
+}
+
+export async function assignRequest(
+  id: string,
+  input: AssignRequestInput
+) {
+  const response = await api.patch<{
+    success: boolean;
+    message: string;
+    data: { request: WorkflowRequest };
+  }>(`/requests/${id}/assignment`, input);
 
   return response.data.data.request;
 }

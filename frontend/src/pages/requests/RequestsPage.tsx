@@ -10,7 +10,7 @@ import {
   Plus,
   CheckCircle2,
 } from "lucide-react";
-import { useAuth } from "../../context/AuthContext";
+import { useAuth } from "../../context/useAuth";
 import { getRequests } from "../../services/requestService";
 import type {
   RequestFilters,
@@ -108,7 +108,11 @@ export default function RequestsPage() {
   }, [page, status, priority, category]);
 
   useEffect(() => {
-    void loadRequests();
+    const timeout = window.setTimeout(() => {
+      void loadRequests();
+    }, 0);
+
+    return () => window.clearTimeout(timeout);
   }, [loadRequests]);
 
   useEffect(() => {
