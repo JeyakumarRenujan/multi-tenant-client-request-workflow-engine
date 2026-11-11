@@ -635,3 +635,53 @@ export async function transitionRequest(
 
   return { id: existing.id, deleted: true };
 }
+
+
+export async function listActiveDevelopers(actor: RequestActor) {
+  requireManager(actor);
+
+  return prisma.user.findMany({
+    where: {
+      organizationId: actor.organizationId!,
+      role: UserRole.DEVELOPER,
+      isActive: true
+    },
+    select: {
+      id: true,
+      name: true,
+      email: true
+    },
+    orderBy: { name: "asc" }
+  });
+}
+
+export async function getRequestActivity(
+  requestId: string,
+  actor: RequestActor
+) {
+  // Reuse the existing visibility rules before reading activity.
+  await getRequestById(requestId, actor);
+
+  return prisma.activityHistory.findMany({
+    where: {
+      requestId,
+      organizationId: actor.organizationId!
+    },
+    select: {
+      id: true,
+      event: true,
+      previousStatus: true,
+      newStatus: true,
+      metadata: true,
+      createdAt: true,
+      actor: {
+        select: {
+          id: true,
+          name: true,
+          role: true
+        }
+      }
+    },
+    orderBy: { createdAt: "asc" }
+  });
+}

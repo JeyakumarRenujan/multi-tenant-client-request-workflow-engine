@@ -9,7 +9,9 @@ import {
   listRequestsController,
   updateRequestController,
   transitionRequestController,
-  softDeleteRequestController
+  softDeleteRequestController,
+  listActiveDevelopersController,
+  getRequestActivityController
 } from "./request.controller";
 import { createRequestSchema } from "./request.validation";
 
@@ -74,6 +76,19 @@ router.delete(
   authenticate,
   authorize(UserRole.CLIENT_USER, UserRole.ORGANIZATION_ADMIN),
   softDeleteRequestController
+);
+
+router.get(
+  "/assignees",
+  authenticate,
+  authorize(UserRole.MANAGER),
+  listActiveDevelopersController
+);
+
+router.get(
+  "/:id/activity",
+  authenticate,
+  getRequestActivityController
 );
 
 router.get(

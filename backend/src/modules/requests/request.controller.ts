@@ -7,7 +7,9 @@ import {
   RequestError,
   updateRequest,
   transitionRequest,
-  softDeleteRequest
+  softDeleteRequest,
+  listActiveDevelopers,
+  getRequestActivity
 } from "./request.service";
 import {
   assignRequestSchema,
@@ -297,6 +299,72 @@ export async function transitionRequestController(
       success: true,
       message: "Draft request deleted successfully",
       data: result
+    });
+  } catch (error) {
+    sendRequestError(error, res, next);
+  }
+}
+
+
+export async function listActiveDevelopersController(
+  req: Request,
+  res: Response,
+  next: NextFunction
+) {
+  try {
+    if (!req.authUser) {
+      res.status(401).json({
+        success: false,
+        message: "Authentication required"
+      });
+      return;
+    }
+
+    const developers = await listActiveDevelopers(req.authUser);
+
+    res.status(200).json({
+      success: true,
+      message: "Active developers retrieved successfully",
+      data: { developers }
+    });
+  } catch (error) {
+    sendRequestError(error, res, next);
+  }
+}
+
+export async function getRequestActivityController(
+  req: Request,
+  res: Response,
+  next: NextFunction
+) {
+  try {
+    if (!req.authUser) {
+      res.status(401).json({
+        success: false,
+        message: "Authentication required"
+      });
+      return;
+    }
+
+    const parsedId = requestIdSchema.safeParse(req.params.id);
+
+    if (!parsedId.success) {
+      res.status(400).json({
+        success: false,
+        message: "Invalid request ID"
+      });
+      return;
+    }
+
+    const activities = await getRequestActivity(
+      parsedId.data,
+      req.authUser
+    );
+
+    res.status(200).json({
+      success: true,
+      message: "Request activity retrieved successfully",
+      data: { activities }
     });
   } catch (error) {
     sendRequestError(error, res, next);
