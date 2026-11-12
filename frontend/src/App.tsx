@@ -1,4 +1,4 @@
-import { Navigate, Route, Routes } from "react-router-dom";
+﻿import { Navigate, Outlet, Route, Routes } from "react-router-dom";
 import LoginPage from "./pages/auth/LoginPage";
 import DashboardPage from "./pages/dashboard/DashboardPage";
 import RequestsPage from "./pages/requests/RequestsPage";
@@ -6,6 +6,7 @@ import CreateRequestPage from "./pages/requests/CreateRequestPage";
 import RequestDetailsPage from "./pages/requests/RequestDetailsPage";
 import UsersPage from "./pages/users/UsersPage";
 import ProtectedRoute from "./routes/ProtectedRoute";
+import AppLayout from "./components/layout/AppLayout";
 import { useAuth } from "./context/useAuth";
 
 function PublicOnlyRoute() {
@@ -24,17 +25,30 @@ function PublicOnlyRoute() {
     : <LoginPage />;
 }
 
+function OrganizationAdminRoute() {
+  const { user } = useAuth();
+
+  return user?.role === "ORGANIZATION_ADMIN"
+    ? <Outlet />
+    : <Navigate to="/dashboard" replace />;
+}
+
 export default function App() {
   return (
     <Routes>
       <Route path="/login" element={<PublicOnlyRoute />} />
 
       <Route element={<ProtectedRoute />}>
-        <Route path="/dashboard" element={<DashboardPage />} />
-        <Route path="/requests" element={<RequestsPage />} />
-        <Route path="/requests/new" element={<CreateRequestPage />} />
-        <Route path="/requests/:id" element={<RequestDetailsPage />} />
-        <Route path="/users" element={<UsersPage />} />
+        <Route element={<AppLayout />}>
+          <Route path="/dashboard" element={<DashboardPage />} />
+          <Route path="/requests" element={<RequestsPage />} />
+          <Route path="/requests/new" element={<CreateRequestPage />} />
+          <Route path="/requests/:id" element={<RequestDetailsPage />} />
+
+          <Route element={<OrganizationAdminRoute />}>
+            <Route path="/users" element={<UsersPage />} />
+          </Route>
+        </Route>
       </Route>
 
       <Route path="/" element={<Navigate to="/dashboard" replace />} />

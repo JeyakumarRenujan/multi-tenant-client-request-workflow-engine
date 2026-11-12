@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+﻿import { useCallback, useEffect, useState } from "react";
 import {
   Activity,
   AlertCircle,
@@ -7,10 +7,8 @@ import {
   Clock,
   FileText,
   LayoutDashboard,
-  LogOut,
   RefreshCw,
   ShieldCheck,
-  Workflow,
   XCircle,
 } from "lucide-react";
 import api from "../../api/axios";
@@ -63,16 +61,14 @@ const priorityStyles: Record<RequestPriority, string> = {
   CRITICAL: "bg-red-500",
 };
 
-function formatRole(role: string) {
-  return role.replaceAll("_", " ");
-}
+
 
 function formatDate(value: string) {
   return new Date(value).toLocaleString();
 }
 
 export default function DashboardPage() {
-  const { user, logout } = useAuth();
+  const { user } = useAuth();
 
   const [summary, setSummary] = useState<DashboardSummary | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -105,10 +101,7 @@ export default function DashboardPage() {
     return () => window.clearTimeout(timeout);
   }, [loadDashboard]);
 
-  const handleLogout = async () => {
-    await logout();
-    window.location.href = "/login";
-  };
+
 
   const totalByStatus = summary
     ? Object.values(summary.statusCounts).reduce(
@@ -126,42 +119,6 @@ export default function DashboardPage() {
 
   return (
     <div className="min-h-screen bg-[#f5f7fb]">
-      <header className="sticky top-0 z-20 bg-white border-b border-slate-200">
-        <div className="max-w-[1400px] mx-auto px-5 sm:px-8 h-[76px] flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-11 h-11 rounded-xl bg-teal-500 flex items-center justify-center">
-              <Workflow className="text-white" size={25} />
-            </div>
-            <div>
-              <h1 className="font-bold text-slate-900">
-                Workflow Workspace
-              </h1>
-              <p className="text-xs text-slate-400">
-                Request management platform
-              </p>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-4">
-            <div className="hidden sm:block text-right">
-              <p className="text-sm font-semibold text-slate-800">
-                {user?.name}
-              </p>
-              <p className="text-xs text-slate-500">
-                {formatRole(user?.role ?? "")}
-              </p>
-            </div>
-
-            <button
-              onClick={handleLogout}
-              className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-slate-600 hover:bg-red-50 hover:text-red-600 transition"
-            >
-              <LogOut size={18} />
-              <span className="hidden sm:inline">Sign out</span>
-            </button>
-          </div>
-        </div>
-      </header>
 
       <main className="max-w-[1400px] mx-auto px-5 sm:px-8 py-9">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
@@ -415,9 +372,7 @@ export default function DashboardPage() {
         ) : null}
 
         <footer className="mt-8 flex flex-col sm:flex-row justify-between gap-2 text-xs text-slate-400">
-          <span>
-            Signed in as {user?.name} � {formatRole(user?.role ?? "")}
-          </span>
+          <span>Signed in as {user?.name} — {user?.role.replaceAll("_", " ")}</span>
           <span>Secure workflow workspace</span>
         </footer>
       </main>
